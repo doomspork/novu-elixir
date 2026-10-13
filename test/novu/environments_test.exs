@@ -32,16 +32,16 @@ defmodule Novu.EnvironmentsTest do
     end
   end
 
-  describe "create_environment/2" do
+  describe "create_environment/3" do
     test "creates a POST to /v1/environments", %{bypass: bypass} do
       name = "example-name"
 
       Bypass.expect(bypass, "POST", "/v1/environments", fn conn ->
-        assert %{"name" => ^name} = read_json_body(conn)
+        assert %{"name" => ^name, "color" => "#FF0000"} = read_json_body(conn)
         novu_response(conn, 201, %{data: %{data: %{name: "example-name"}}})
       end)
 
-      assert {:ok, _body} = Environments.create_environment(name)
+      assert {:ok, _body} = Environments.create_environment(name, "#FF0000")
     end
 
     test "supports optional parentId", %{bypass: bypass} do
@@ -53,7 +53,7 @@ defmodule Novu.EnvironmentsTest do
         novu_response(conn, 201, %{data: %{data: %{name: name}}})
       end)
 
-      assert {:ok, _body} = Environments.create_environment(name, parent_id: parent_id)
+      assert {:ok, _body} = Environments.create_environment(name, "#FF0000", parent_id: parent_id)
     end
   end
 
@@ -72,7 +72,8 @@ defmodule Novu.EnvironmentsTest do
       environment_id = "example-id"
 
       Bypass.expect(bypass, "PUT", "/v1/environments/#{URI.encode(environment_id)}", fn conn ->
-        assert %{} = read_json_body(conn)
+        assert body = read_json_body(conn)
+        assert body == %{}
         novu_response(conn, 200, %{data: %{data: %{name: "example-name"}}})
       end)
 
@@ -125,6 +126,121 @@ defmodule Novu.EnvironmentsTest do
       end)
 
       assert {:ok, _body} = Environments.update_environment(environment_id, inbound_parse_domain: inbound_parse_domain)
+    end
+
+    test "supports optional color", %{bypass: bypass} do
+      Bypass.expect(bypass, "PUT", "/v1/environments/env-1", fn conn ->
+        assert %{"color" => "#00FF00"} = read_json_body(conn)
+        novu_response(conn, 200, %{})
+      end)
+
+      assert {:ok, _body} = Environments.update_environment("env-1", color: "#00FF00")
+    end
+
+    test "supports optional bridge", %{bypass: bypass} do
+      Bypass.expect(bypass, "PUT", "/v1/environments/env-1", fn conn ->
+        assert %{"bridge" => %{"url" => "https://example.com/api/novu"}} = read_json_body(conn)
+        novu_response(conn, 200, %{})
+      end)
+
+      assert {:ok, _body} = Environments.update_environment("env-1", bridge: %{url: "https://example.com/api/novu"})
+    end
+
+    test "omits dns unless inbound_parse_domain is given", %{bypass: bypass} do
+      Bypass.expect(bypass, "PUT", "/v1/environments/env-1", fn conn ->
+        refute Map.has_key?(read_json_body(conn), "dns")
+        novu_response(conn, 200, %{})
+      end)
+
+      assert {:ok, _body} = Environments.update_environment("env-1", name: "x")
+    end
+  end
+
+  describe "delete_environment/1" do
+    test "creates a DELETE to /v1/environments/{environmentId}", %{bypass: bypass} do
+      Bypass.expect(bypass, "DELETE", "/v1/environments/env-1", fn conn ->
+        novu_response(conn, 200, %{})
+      end)
+
+      assert {:ok, _body} = Environments.delete_environment("env-1")
+    end
+
+    test "escapes the environment id", %{bypass: bypass} do
+      Bypass.expect(bypass, "DELETE", "/v1/environments/a%2Fb", fn conn ->
+        assert conn.request_path == "/v1/environments/a%2Fb"
+        novu_response(conn, 200, %{})
+      end)
+
+      assert {:ok, _body} = Environments.delete_environment("a/b")
+    end
+  end
+
+  describe "get_environment_tags/1" do
+    test "creates a GET to /v2/environments/{environmentId}/tags", %{bypass: bypass} do
+      Bypass.expect(bypass, "GET", "/v2/environments/env-1/tags", fn conn ->
+        novu_response(conn, 200, %{data: ["a", "b"]})
+      end)
+
+      assert {:ok, _body} = Environments.get_environment_tags("env-1")
+    end
+  end
+
+  describe "diff_environment/2" do
+    test "creates a POST to /v2/environments/{targetEnvironmentId}/diff", %{bypass: bypass} do
+      Bypass.expect(bypass, "POST", "/v2/environments/env-1/diff", fn conn ->
+        assert read_json_body(conn) == %{}
+        novu_response(conn, 200, %{})
+      end)
+
+      assert {:ok, _body} = Environments.diff_environment("env-1")
+    end
+
+    test "supports optional sourceEnvironmentId", %{bypass: bypass} do
+      Bypass.expect(bypass, "POST", "/v2/environments/env-1/diff", fn conn ->
+        assert %{"sourceEnvironmentId" => "env-2"} = read_json_body(conn)
+        novu_response(conn, 200, %{})
+      end)
+
+      assert {:ok, _body} = Environments.diff_environment("env-1", source_environment_id: "env-2")
+    end
+  end
+
+  describe "publish_environment/2" do
+    test "creates a POST to /v2/environments/{targetEnvironmentId}/publish", %{bypass: bypass} do
+      Bypass.expect(bypass, "POST", "/v2/environments/env-1/publish", fn conn ->
+        assert read_json_body(conn) == %{}
+        novu_response(conn, 200, %{})
+      end)
+
+      assert {:ok, _body} = Environments.publish_environment("env-1")
+    end
+
+    test "supports optional sourceEnvironmentId", %{bypass: bypass} do
+      Bypass.expect(bypass, "POST", "/v2/environments/env-1/publish", fn conn ->
+        assert %{"sourceEnvironmentId" => "env-2"} = read_json_body(conn)
+        novu_response(conn, 200, %{})
+      end)
+
+      assert {:ok, _body} = Environments.publish_environment("env-1", source_environment_id: "env-2")
+    end
+
+    test "supports optional dryRun", %{bypass: bypass} do
+      Bypass.expect(bypass, "POST", "/v2/environments/env-1/publish", fn conn ->
+        assert %{"dryRun" => true} = read_json_body(conn)
+        novu_response(conn, 200, %{})
+      end)
+
+      assert {:ok, _body} = Environments.publish_environment("env-1", dry_run: true)
+    end
+
+    test "supports optional resources", %{bypass: bypass} do
+      Bypass.expect(bypass, "POST", "/v2/environments/env-1/publish", fn conn ->
+        assert %{"resources" => [%{"resourceType" => "REGULAR", "resourceId" => "wf-1"}]} = read_json_body(conn)
+        novu_response(conn, 200, %{})
+      end)
+
+      resources = [%{resourceType: "REGULAR", resourceId: "wf-1"}]
+      assert {:ok, _body} = Environments.publish_environment("env-1", resources: resources)
     end
   end
 
