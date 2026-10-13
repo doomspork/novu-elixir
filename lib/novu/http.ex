@@ -30,7 +30,7 @@ defmodule Novu.Http do
           json: term(),
           idempotency_key: String.t(),
           headers: [{String.t(), String.t()}] | map(),
-          form_multipart: keyword()
+          form_multipart: [{atom() | String.t(), term()}]
         ]
 
   @doc """
