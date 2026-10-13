@@ -6,23 +6,70 @@ defmodule Novu.Subscribers do
   alias Novu.Http
 
   @doc """
-  Returns a list of subscribers paginated using the `page` query parameter
+  Searches subscribers using cursor pagination and optional filters.
 
-  [API Documentation](https://docs.novu.co/api/get-subscribers/)
+  The search is case sensitive.
+
+  ## Options
+
+    * `:after` - cursor to fetch results after
+    * `:before` - cursor to fetch results before
+    * `:limit` - number of items to return
+    * `:order_direction` - `"ASC"` or `"DESC"`
+    * `:order_by` - field to order by
+    * `:include_cursor` - include the cursor item in the response
+    * `:email` - filter by email
+    * `:name` - filter by name
+    * `:phone` - filter by phone
+    * `:subscriber_id` - filter by subscriber identifier
+
+  [API Documentation](https://docs.novu.co/api-reference/subscribers/search-subscribers)
   """
-  @spec get_subscribers(opts :: Keyword.t()) :: Http.response()
-  def get_subscribers(opts \\ []) do
-    page = Keyword.get(opts, :page)
-    params = add_optional_value(%{}, :page, page)
-    Http.get("/v1/subscribers", params)
+  @spec search_subscribers(opts :: Keyword.t()) :: Http.response()
+  def search_subscribers(opts \\ []) do
+    params =
+      %{}
+      |> add_optional_value(:after, opts[:after])
+      |> add_optional_value(:before, opts[:before])
+      |> add_optional_value(:limit, opts[:limit])
+      |> add_optional_value(:orderDirection, opts[:order_direction])
+      |> add_optional_value(:orderBy, opts[:order_by])
+      |> add_optional_value(:includeCursor, opts[:include_cursor])
+      |> add_optional_value(:email, opts[:email])
+      |> add_optional_value(:name, opts[:name])
+      |> add_optional_value(:phone, opts[:phone])
+      |> add_optional_value(:subscriberId, opts[:subscriber_id])
+
+    Http.get("/v2/subscribers", params)
   end
 
   @doc """
-  Creates a subscriber entity, in the Novu platform. The subscriber will be later used to receive notifications,
-  and access notification feeds. Communication credentials such as email, phone number, and 3 rd party credentials
-  i.e slack tokens could be later associated to this entity.
+  Deprecated wrapper around `search_subscribers/1`.
 
-  [API Documentation](https://docs.novu.co/api/create-subscriber/)
+  Only `:limit` is forwarded. The `:page` option is no longer supported by the
+  API (pagination is cursor based) and is ignored.
+
+  [API Documentation](https://docs.novu.co/api-reference/subscribers/search-subscribers)
+  """
+  @deprecated "Use search_subscribers/1"
+  @spec get_subscribers(opts :: Keyword.t()) :: Http.response()
+  def get_subscribers(opts \\ []) do
+    search_subscribers(limit: opts[:limit])
+  end
+
+  @doc """
+  Creates a subscriber entity in the Novu platform. If the subscriber already exists it is
+  updated, unless `:fail_if_exists` is `true`.
+
+  ## Options
+
+    * `:email`, `:first_name`, `:last_name`, `:phone`, `:avatar`
+    * `:locale`, `:timezone`
+    * `:data` - map of custom data
+    * `:fail_if_exists` - when `true`, the request fails if the subscriber already exists
+      (sent as the `failIfExists` query parameter)
+
+  [API Documentation](https://docs.novu.co/api-reference/subscribers/create-a-subscriber)
   """
   @spec create_subscriber(subscriber_id :: String.t(), opts :: Keyword.t()) :: Http.response()
   def create_subscriber(subscriber_id, opts \\ []) do
@@ -31,58 +78,109 @@ defmodule Novu.Subscribers do
       |> Keyword.put(:subscriber_id, subscriber_id)
       |> build_subscriber_payload()
 
-    Http.post("/v1/subscribers", payload)
+    params = add_optional_value(%{}, :failIfExists, opts[:fail_if_exists])
+
+    Http.post("/v2/subscribers", payload, params: params)
   end
 
   @doc """
-  Get subscriber by your internal id used to identify the subscriber
+  Retrieves a subscriber by its unique identifier.
 
-  [API Documentation](https://docs.novu.co/api/get-subscriber/)
+  [API Documentation](https://docs.novu.co/api-reference/subscribers/retrieve-a-subscriber)
   """
   @spec get_subscriber(subscriber_id :: String.t()) :: Http.response()
   def get_subscriber(subscriber_id) do
-    Http.get("/v1/subscribers/#{Http.path_segment(subscriber_id)}")
+    Http.get("/v2/subscribers/#{Http.path_segment(subscriber_id)}")
   end
 
   @doc """
-  Used to update the subscriber entity with new information
+  Updates a subscriber with new information.
 
-  [API Documentation](https://docs.novu.co/api/update-subscriber/)
+  ## Options
+
+  `:email`, `:first_name`, `:last_name`, `:phone`, `:avatar`, `:locale`, `:timezone`, `:data`.
+
+  [API Documentation](https://docs.novu.co/api-reference/subscribers/update-a-subscriber)
   """
   @spec update_subscriber(subscriber_id :: String.t(), opts :: Keyword.t()) :: Http.response()
   def update_subscriber(subscriber_id, opts \\ []) do
-    payload = build_subscriber_payload(opts)
-    Http.put("/v1/subscribers/#{Http.path_segment(subscriber_id)}", payload)
+    payload = opts |> Keyword.delete(:subscriber_id) |> build_subscriber_payload()
+    Http.patch("/v2/subscribers/#{Http.path_segment(subscriber_id)}", payload)
   end
 
   @doc """
-  Deletes a subscriber entity from the Novu platform
+  Deletes a subscriber from the Novu platform along with associated messages, preferences
+  and topic subscriptions.
 
-  [API Documentation](https://docs.novu.co/api/delete-subscriber/)
+  [API Documentation](https://docs.novu.co/api-reference/subscribers/delete-a-subscriber)
   """
   @spec delete_subscriber(subscriber_id :: String.t()) :: Http.response()
   def delete_subscriber(subscriber_id) do
-    Http.delete("/v1/subscribers/#{Http.path_segment(subscriber_id)}")
+    Http.delete("/v2/subscribers/#{Http.path_segment(subscriber_id)}")
   end
 
   @doc """
-  Subscriber credentials associated to the delivery methods such as slack and push tokens.
+  Creates multiple subscribers at once.
 
-  [API Documentation](https://docs.novu.co/api/update-subscriber-credentials/)
+  Each item is a map shaped like the create subscriber body (`subscriberId` required;
+  optional `firstName`, `lastName`, `email`, `phone`, `avatar`, `locale`, `timezone`, `data`).
+  The bulk API is limited to 500 subscribers per request.
+
+  [API Documentation](https://docs.novu.co/api-reference/subscribers/bulk-create-subscribers)
   """
-  @spec update_subscriber_credentials(subscriber_id :: String.t(), opts :: map()) :: Http.response()
+  @spec bulk_create_subscribers(subscribers :: [map()]) :: Http.response()
+  def bulk_create_subscribers(subscribers) when is_list(subscribers) do
+    Http.post("/v1/subscribers/bulk", %{subscribers: subscribers})
+  end
+
+  @doc """
+  Updates the online status of a subscriber.
+
+  [API Documentation](https://docs.novu.co/api-reference/subscribers/update-subscriber-online-status)
+  """
+  @spec update_subscriber_online_status(subscriber_id :: String.t(), is_online :: boolean()) :: Http.response()
+  def update_subscriber_online_status(subscriber_id, is_online) when is_boolean(is_online) do
+    Http.patch("/v1/subscribers/#{Http.path_segment(subscriber_id)}/online-status", %{isOnline: is_online})
+  end
+
+  @doc """
+  Updates subscriber credentials for a chat or push provider. Creates `deviceTokens` or
+  replaces the existing ones.
+
+  ## Options
+
+    * `:integration_identifier` - the integration identifier
+    * `:webhook_url`, `:channel`, `:device_tokens`, `:alert_uid`, `:title`, `:image_url`,
+      `:state`, `:external_url` - provider credentials
+
+  [API Documentation](https://docs.novu.co/api-reference/subscribers/update-provider-credentials)
+  """
+  @spec update_subscriber_credentials(subscriber_id :: String.t(), provider_id :: String.t(), opts :: Keyword.t()) ::
+          Http.response()
   def update_subscriber_credentials(subscriber_id, provider_id, opts \\ []) do
-    webhook_url = Keyword.get(opts, :webhook_url)
-    device_tokens = Keyword.get(opts, :device_tokens)
+    subscriber_id |> credentials_path() |> Http.put(credentials_payload(provider_id, opts))
+  end
 
-    credentials =
-      %{}
-      |> add_optional_value(:webhookUrl, webhook_url)
-      |> add_optional_value(:deviceTokens, device_tokens)
+  @doc """
+  Upserts subscriber credentials for a chat or push provider. Creates `deviceTokens` or
+  appends to the existing ones. Accepts the same options as `update_subscriber_credentials/3`.
 
-    payload = %{providerId: provider_id, credentials: credentials}
+  [API Documentation](https://docs.novu.co/api-reference/subscribers/upsert-provider-credentials)
+  """
+  @spec upsert_subscriber_credentials(subscriber_id :: String.t(), provider_id :: String.t(), opts :: Keyword.t()) ::
+          Http.response()
+  def upsert_subscriber_credentials(subscriber_id, provider_id, opts \\ []) do
+    subscriber_id |> credentials_path() |> Http.patch(credentials_payload(provider_id, opts))
+  end
 
-    Http.put("/v1/subscribers/#{Http.path_segment(subscriber_id)}/credentials", payload)
+  @doc """
+  Deletes the credentials of a provider for a subscriber. This action is irreversible.
+
+  [API Documentation](https://docs.novu.co/api-reference/subscribers/delete-provider-credentials)
+  """
+  @spec delete_subscriber_credentials(subscriber_id :: String.t(), provider_id :: String.t()) :: Http.response()
+  def delete_subscriber_credentials(subscriber_id, provider_id) do
+    Http.delete("#{credentials_path(subscriber_id)}/#{Http.path_segment(provider_id)}")
   end
 
   @doc """
@@ -178,21 +276,38 @@ defmodule Novu.Subscribers do
     )
   end
 
-  defp build_subscriber_payload(opts) do
-    subscriber_id = Keyword.get(opts, :subscriber_id)
-    email = Keyword.get(opts, :email)
-    first_name = Keyword.get(opts, :first_name)
-    last_name = Keyword.get(opts, :last_name)
-    phone = Keyword.get(opts, :phone)
-    avatar = Keyword.get(opts, :avatar)
+  defp credentials_path(subscriber_id), do: "/v1/subscribers/#{Http.path_segment(subscriber_id)}/credentials"
 
+  defp credentials_payload(provider_id, opts) do
+    credentials =
+      %{}
+      |> add_optional_value(:webhookUrl, opts[:webhook_url])
+      |> add_optional_value(:channel, opts[:channel])
+      |> add_optional_value(:deviceTokens, opts[:device_tokens])
+      |> add_optional_value(:alertUid, opts[:alert_uid])
+      |> add_optional_value(:title, opts[:title])
+      |> add_optional_value(:imageUrl, opts[:image_url])
+      |> add_optional_value(:state, opts[:state])
+      |> add_optional_value(:externalUrl, opts[:external_url])
+
+    add_optional_value(
+      %{providerId: provider_id, credentials: credentials},
+      :integrationIdentifier,
+      opts[:integration_identifier]
+    )
+  end
+
+  defp build_subscriber_payload(opts) do
     %{}
-    |> add_optional_value(:subscriberId, subscriber_id)
-    |> add_optional_value(:email, email)
-    |> add_optional_value(:firstName, first_name)
-    |> add_optional_value(:lastName, last_name)
-    |> add_optional_value(:phone, phone)
-    |> add_optional_value(:avatar, avatar)
+    |> add_optional_value(:subscriberId, opts[:subscriber_id])
+    |> add_optional_value(:email, opts[:email])
+    |> add_optional_value(:firstName, opts[:first_name])
+    |> add_optional_value(:lastName, opts[:last_name])
+    |> add_optional_value(:phone, opts[:phone])
+    |> add_optional_value(:avatar, opts[:avatar])
+    |> add_optional_value(:locale, opts[:locale])
+    |> add_optional_value(:timezone, opts[:timezone])
+    |> add_optional_value(:data, opts[:data])
   end
 
   defp add_optional_value(map, _key, nil), do: map
