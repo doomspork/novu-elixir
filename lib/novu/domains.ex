@@ -21,7 +21,7 @@ defmodule Novu.Domains do
     * `:include_cursor` - include the cursor item in the response
     * `:name` - filter by domain name
 
-  [API Documentation](https://docs.novu.co/api-reference/domains/list-domains-for-an-environment)
+  Not yet in the published API reference; see the [OpenAPI spec](https://api.novu.co/openapi.json).
   """
   @spec list_domains(opts :: Keyword.t()) :: Http.response()
   def list_domains(opts \\ []) do
@@ -40,7 +40,7 @@ defmodule Novu.Domains do
 
     * `:data` - map of string key-value metadata
 
-  [API Documentation](https://docs.novu.co/api-reference/domains/create-a-domain)
+  Not yet in the published API reference; see the [OpenAPI spec](https://api.novu.co/openapi.json).
   """
   @spec create_domain(name :: String.t(), opts :: Keyword.t()) :: Http.response()
   def create_domain(name, opts \\ []) do
@@ -52,7 +52,7 @@ defmodule Novu.Domains do
   @doc """
   Retrieves a domain by name.
 
-  [API Documentation](https://docs.novu.co/api-reference/domains/retrieve-a-domain-by-name)
+  Not yet in the published API reference; see the [OpenAPI spec](https://api.novu.co/openapi.json).
   """
   @spec get_domain(domain :: String.t()) :: Http.response()
   def get_domain(domain), do: domain |> domain_path() |> Http.get()
@@ -64,7 +64,7 @@ defmodule Novu.Domains do
 
     * `:data` - map of metadata; replaces the whole metadata object when given
 
-  [API Documentation](https://docs.novu.co/api-reference/domains/update-a-domain)
+  Not yet in the published API reference; see the [OpenAPI spec](https://api.novu.co/openapi.json).
   """
   @spec update_domain(domain :: String.t(), opts :: Keyword.t()) :: Http.response()
   def update_domain(domain, opts \\ []) do
@@ -76,7 +76,7 @@ defmodule Novu.Domains do
   @doc """
   Deletes a domain and all of its routes.
 
-  [API Documentation](https://docs.novu.co/api-reference/domains/delete-a-domain)
+  Not yet in the published API reference; see the [OpenAPI spec](https://api.novu.co/openapi.json).
   """
   @spec delete_domain(domain :: String.t()) :: Http.response()
   def delete_domain(domain), do: domain |> domain_path() |> Http.delete()
@@ -84,7 +84,7 @@ defmodule Novu.Domains do
   @doc """
   Performs a live DNS lookup to refresh the verification status of a domain.
 
-  [API Documentation](https://docs.novu.co/api-reference/domains/verify-a-domain)
+  Not yet in the published API reference; see the [OpenAPI spec](https://api.novu.co/openapi.json).
   """
   @spec verify_domain(domain :: String.t()) :: Http.response()
   def verify_domain(domain), do: Http.post(domain_path(domain) <> "/verify", nil)
@@ -92,7 +92,7 @@ defmodule Novu.Domains do
   @doc """
   Runs live DNS checks for inbound email readiness of a domain.
 
-  [API Documentation](https://docs.novu.co/api-reference/domains/diagnose-inbound-dns-for-a-domain)
+  Not yet in the published API reference; see the [OpenAPI spec](https://api.novu.co/openapi.json).
   """
   @spec diagnose_domain(domain :: String.t()) :: Http.response()
   def diagnose_domain(domain), do: Http.post(domain_path(domain) <> "/diagnose", nil)
@@ -100,7 +100,7 @@ defmodule Novu.Domains do
   @doc """
   Retrieves whether DNS auto-configuration is available for a domain.
 
-  [API Documentation](https://docs.novu.co/api-reference/domains/retrieve-auto-configuration-availability)
+  Not yet in the published API reference; see the [OpenAPI spec](https://api.novu.co/openapi.json).
   """
   @spec get_domain_auto_configure(domain :: String.t()) :: Http.response()
   def get_domain_auto_configure(domain), do: Http.get(domain_path(domain) <> "/auto-configure")
@@ -112,7 +112,7 @@ defmodule Novu.Domains do
 
     * `:redirect_uri` - dashboard URL to return to after the consent flow
 
-  [API Documentation](https://docs.novu.co/api-reference/domains/start-dns-auto-configuration)
+  Not yet in the published API reference; see the [OpenAPI spec](https://api.novu.co/openapi.json).
   """
   @spec start_domain_auto_configure(domain :: String.t(), opts :: Keyword.t()) :: Http.response()
   def start_domain_auto_configure(domain, opts \\ []) do
@@ -134,7 +134,7 @@ defmodule Novu.Domains do
     * `:include_cursor` - include the cursor item in the response
     * `:agent_id` - only routes pointing to this agent identifier
 
-  [API Documentation](https://docs.novu.co/api-reference/domains/list-routes-for-a-domain)
+  Not yet in the published API reference; see the [OpenAPI spec](https://api.novu.co/openapi.json).
   """
   @spec list_domain_routes(domain :: String.t(), opts :: Keyword.t()) :: Http.response()
   def list_domain_routes(domain, opts \\ []) do
@@ -157,7 +157,7 @@ defmodule Novu.Domains do
     * `:agent_id` - agent identifier; required when type is `"agent"`
     * `:data` - map of string key-value metadata
 
-  [API Documentation](https://docs.novu.co/api-reference/domains/create-a-route)
+  Not yet in the published API reference; see the [OpenAPI spec](https://api.novu.co/openapi.json).
   """
   @spec create_domain_route(domain :: String.t(), address :: String.t(), opts :: Keyword.t()) :: Http.response()
   def create_domain_route(domain, address, opts \\ []) do
@@ -173,7 +173,7 @@ defmodule Novu.Domains do
   @doc """
   Retrieves the route bound to `<address>@<domain>`.
 
-  [API Documentation](https://docs.novu.co/api-reference/domains/retrieve-a-route-by-address)
+  Not yet in the published API reference; see the [OpenAPI spec](https://api.novu.co/openapi.json).
   """
   @spec get_domain_route(domain :: String.t(), address :: String.t()) :: Http.response()
   def get_domain_route(domain, address), do: domain |> route_path(address) |> Http.get()
@@ -187,7 +187,7 @@ defmodule Novu.Domains do
     * `:agent_id` - agent identifier
     * `:data` - map of metadata; replaces route metadata when given
 
-  [API Documentation](https://docs.novu.co/api-reference/domains/update-a-route)
+  Not yet in the published API reference; see the [OpenAPI spec](https://api.novu.co/openapi.json).
   """
   @spec update_domain_route(domain :: String.t(), address :: String.t(), opts :: Keyword.t()) :: Http.response()
   def update_domain_route(domain, address, opts \\ []) do
@@ -203,7 +203,7 @@ defmodule Novu.Domains do
   @doc """
   Deletes the route bound to `<address>@<domain>`.
 
-  [API Documentation](https://docs.novu.co/api-reference/domains/delete-a-route)
+  Not yet in the published API reference; see the [OpenAPI spec](https://api.novu.co/openapi.json).
   """
   @spec delete_domain_route(domain :: String.t(), address :: String.t()) :: Http.response()
   def delete_domain_route(domain, address), do: domain |> route_path(address) |> Http.delete()
@@ -219,7 +219,7 @@ defmodule Novu.Domains do
     * `:html` - HTML body
     * `:dry_run` - when `true`, returns the payload without delivering it
 
-  [API Documentation](https://docs.novu.co/api-reference/domains/test-an-inbound-route)
+  Not yet in the published API reference; see the [OpenAPI spec](https://api.novu.co/openapi.json).
   """
   @spec test_domain_route(domain :: String.t(), address :: String.t(), opts :: Keyword.t()) :: Http.response()
   def test_domain_route(domain, address, opts \\ []) do

@@ -9,8 +9,6 @@ defmodule Novu.Environments do
   Retrieve the current environment
 
   **Deprecated**: the endpoint was removed from the Novu API; use `get_environments/0`.
-
-  [API Documentation](https://docs.novu.co/api-reference/environments/get-current-environment)
   """
   @deprecated "The /v1/environments/me endpoint was removed from the Novu API; use get_environments/0"
   @spec get_current_environment :: Http.response()
@@ -134,8 +132,6 @@ defmodule Novu.Environments do
   Returns a list of API keys
 
   **Deprecated**: the endpoint was removed from the Novu API and has no replacement (manage API keys in the dashboard).
-
-  [API Documentation](https://docs.novu.co/api-reference/environments/get-api-keys)
   """
   @deprecated "The API keys endpoints were removed from the Novu API; manage keys in the dashboard"
   @spec get_api_keys :: Http.response()
@@ -147,8 +143,6 @@ defmodule Novu.Environments do
   Regenerate API keys
 
   **Deprecated**: the endpoint was removed from the Novu API and has no replacement (manage API keys in the dashboard).
-
-  [API Documentation](https://docs.novu.co/api-reference/environments/regenerate-api-keys)
   """
   @deprecated "The API keys endpoints were removed from the Novu API; manage keys in the dashboard"
   @spec regenerate_api_keys :: Http.response()
