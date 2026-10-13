@@ -22,6 +22,17 @@ defmodule Novu.SubscribersTest do
     {:ok, bypass: bypass}
   end
 
+  describe "path escaping" do
+    test "subscriber id containing a slash is escaped", %{bypass: bypass} do
+      Bypass.expect_once(bypass, "GET", "/v1/subscribers/org%2F123", fn conn ->
+        assert conn.request_path == "/v1/subscribers/org%2F123"
+        novu_response(conn, 200, %{data: %{}})
+      end)
+
+      assert {:ok, _} = Subscribers.get_subscriber("org/123")
+    end
+  end
+
   describe "get_subscribers/1" do
     test "creates a GET to /v1/subscribers", %{bypass: bypass} do
       Bypass.expect(bypass, "GET", "/v1/subscribers", fn conn ->

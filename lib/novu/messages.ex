@@ -20,6 +20,6 @@ defmodule Novu.Messages do
   """
   @spec delete_messages(message_id :: String.t()) :: Http.response()
   def delete_messages(message_id) do
-    Http.delete("/v1/messages/#{message_id}")
+    Http.delete("/v1/messages/#{Http.path_segment(message_id)}")
   end
 end
