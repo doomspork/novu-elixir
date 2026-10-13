@@ -12,8 +12,8 @@ on:
       - main
 
 env:
-  ELIXIR_VERSION: "1.14"
-  OTP_VERSION: "25.0"
+  ELIXIR_VERSION: "1.15"
+  OTP_VERSION: "26"
 
 concurrency:
   group: ${{ github.head_ref || github.run_id }}

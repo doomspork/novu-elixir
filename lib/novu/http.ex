@@ -141,6 +141,21 @@ defmodule Novu.Http do
     min(Integer.pow(2, n) * wait_min(), wait_max())
   end
 
+  # Retries transient failures on every method (requests carry an idempotency key),
+  # honoring `Retry-After` and otherwise backing off exponentially. Req rejects
+  # `{:delay, ms}` when `:retry_delay` is also set, so the backoff is computed here.
+  defp retry?(request, %Req.Response{status: status} = response) when status in [408, 429, 500, 502, 503, 504] do
+    # Despite its docs, Req.Response.get_retry_after/1 returns milliseconds.
+    {:delay, Req.Response.get_retry_after(response) || backoff(request)}
+  end
+
+  defp retry?(request, %Req.TransportError{reason: reason}) when reason in [:timeout, :econnrefused, :closed],
+    do: {:delay, backoff(request)}
+
+  defp retry?(_request, _response_or_exception), do: false
+
+  defp backoff(request), do: request |> Req.Request.get_private(:req_retry_count, 0) |> retry_delay_function()
+
   defp build_req(url, method, opts),
     do:
       Req.new(
@@ -148,15 +163,14 @@ defmodule Novu.Http do
         headers: request_headers(method, opts),
         url: url,
         user_agent: @user_agent,
-        retry: :transient,
-        retry_delay: &retry_delay_function/1,
+        retry: &retry?/2,
         max_retries: max_retries(),
         retry_log_level: retry_log_level()
       )
 
   defp handle_response(%{body: body, status: status_code}) when status_code in 200..299, do: {:ok, body}
   defp handle_response(%{body: %{"errors" => errors}}), do: {:error, errors}
-  defp handle_response(%Mint.TransportError{reason: :timeout}), do: {:error, :timeout}
+  defp handle_response(%Req.TransportError{reason: :timeout}), do: {:error, :timeout}
   defp handle_response(response), do: {:error, response}
 
   defp request_headers(method, opts) do
