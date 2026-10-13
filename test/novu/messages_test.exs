@@ -32,7 +32,7 @@ defmodule Novu.MessagesTest do
     end
   end
 
-  describe "delete_subscriber/1" do
+  describe "delete_messages/1" do
     test "creates a DELETE to /v1/messages/{messageId}", %{bypass: bypass} do
       message_id = "example-id"
 
@@ -40,7 +40,7 @@ defmodule Novu.MessagesTest do
         novu_response(conn, 200, %{acknowledged: true, status: "deleted"})
       end)
 
-      assert {:ok, _body} = Messages.delete_message(message_id)
+      assert {:ok, _body} = Messages.delete_messages(message_id)
     end
   end
 end
