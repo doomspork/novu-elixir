@@ -28,7 +28,8 @@ defmodule Novu.ExecutionDetailsTest do
         novu_response(conn, 200, %{data: []})
       end)
 
-      assert {:ok, _body} = ExecutionDetails.get_execution_details()
+      # credo:disable-for-next-line Credo.Check.Refactor.Apply
+      assert {:ok, _body} = apply(ExecutionDetails, :get_execution_details, [])
     end
   end
 end

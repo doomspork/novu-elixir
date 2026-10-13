@@ -31,7 +31,8 @@ defmodule Novu.NotificationGroupsTest do
         novu_response(conn, 201, %{data: %{name: notification_group_name}})
       end)
 
-      assert {:ok, _body} = NotificationGroups.create_notification_group(notification_group_name)
+      # credo:disable-for-next-line Credo.Check.Refactor.Apply
+      assert {:ok, _body} = apply(NotificationGroups, :create_notification_group, [notification_group_name])
     end
   end
 
@@ -41,7 +42,8 @@ defmodule Novu.NotificationGroupsTest do
         novu_response(conn, 201, %{data: []})
       end)
 
-      assert {:ok, _body} = NotificationGroups.get_notification_groups()
+      # credo:disable-for-next-line Credo.Check.Refactor.Apply
+      assert {:ok, _body} = apply(NotificationGroups, :get_notification_groups, [])
     end
   end
 end

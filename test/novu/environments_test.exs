@@ -28,7 +28,8 @@ defmodule Novu.EnvironmentsTest do
         novu_response(conn, 200, %{data: %{data: %{name: "example-name"}}})
       end)
 
-      assert {:ok, _body} = Environments.get_current_environment()
+      # credo:disable-for-next-line Credo.Check.Refactor.Apply
+      assert {:ok, _body} = apply(Environments, :get_current_environment, [])
     end
   end
 
@@ -250,7 +251,8 @@ defmodule Novu.EnvironmentsTest do
         novu_response(conn, 200, %{data: %{data: %{name: "example-name"}}})
       end)
 
-      assert {:ok, _body} = Environments.get_api_keys()
+      # credo:disable-for-next-line Credo.Check.Refactor.Apply
+      assert {:ok, _body} = apply(Environments, :get_api_keys, [])
     end
   end
 
@@ -261,7 +263,8 @@ defmodule Novu.EnvironmentsTest do
         novu_response(conn, 201, %{data: %{data: %{name: "example-name"}}})
       end)
 
-      assert {:ok, _body} = Environments.regenerate_api_keys()
+      # credo:disable-for-next-line Credo.Check.Refactor.Apply
+      assert {:ok, _body} = apply(Environments, :regenerate_api_keys, [])
     end
   end
 end

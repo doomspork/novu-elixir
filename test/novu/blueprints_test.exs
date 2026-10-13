@@ -30,7 +30,8 @@ defmodule Novu.BlueprintsTest do
         novu_response(conn, 200, %{data: %{templateId: template_id}})
       end)
 
-      assert {:ok, _body} = Blueprints.get_blueprints(template_id)
+      # credo:disable-for-next-line Credo.Check.Refactor.Apply
+      assert {:ok, _body} = apply(Blueprints, :get_blueprints, [template_id])
     end
   end
 
@@ -40,7 +41,8 @@ defmodule Novu.BlueprintsTest do
         novu_response(conn, 201, %{data: []})
       end)
 
-      assert {:ok, _body} = Blueprints.get_group_by_category()
+      # credo:disable-for-next-line Credo.Check.Refactor.Apply
+      assert {:ok, _body} = apply(Blueprints, :get_group_by_category, [])
     end
   end
 end

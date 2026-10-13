@@ -324,7 +324,8 @@ defmodule Novu.SubscribersTest do
         novu_response(conn, 200, %{data: []})
       end)
 
-      assert {:ok, _body} = Subscribers.get_subscriber_preferences(subscriber_id)
+      # credo:disable-for-next-line Credo.Check.Refactor.Apply
+      assert {:ok, _body} = apply(Subscribers, :get_subscriber_preferences, [subscriber_id])
     end
   end
 
@@ -345,7 +346,10 @@ defmodule Novu.SubscribersTest do
         end
       )
 
-      assert {:ok, _body} = Subscribers.update_subscriber_preferences(subscriber_id, template_id, type, enabled)
+      # credo:disable-for-next-line Credo.Check.Refactor.Apply
+      result = apply(Subscribers, :update_subscriber_preferences, [subscriber_id, template_id, type, enabled])
+
+      assert {:ok, _body} = result
     end
   end
 
@@ -358,7 +362,8 @@ defmodule Novu.SubscribersTest do
         novu_response(conn, 200, %{data: []})
       end)
 
-      assert {:ok, _body} = Subscribers.get_notification_feed(subscriber_id)
+      # credo:disable-for-next-line Credo.Check.Refactor.Apply
+      assert {:ok, _body} = apply(Subscribers, :get_notification_feed, [subscriber_id])
     end
 
     test "supports optional page", %{bypass: bypass} do
@@ -371,7 +376,8 @@ defmodule Novu.SubscribersTest do
         novu_response(conn, 200, %{data: []})
       end)
 
-      assert {:ok, _body} = Subscribers.get_notification_feed(subscriber_id, page: page)
+      # credo:disable-for-next-line Credo.Check.Refactor.Apply
+      assert {:ok, _body} = apply(Subscribers, :get_notification_feed, [subscriber_id, [page: page]])
     end
 
     test "supports optional feed_identifier", %{bypass: bypass} do
@@ -383,7 +389,10 @@ defmodule Novu.SubscribersTest do
         novu_response(conn, 200, %{data: []})
       end)
 
-      assert {:ok, _body} = Subscribers.get_notification_feed(subscriber_id, feed_identifier: feed_identifier)
+      # credo:disable-for-next-line Credo.Check.Refactor.Apply
+      result = apply(Subscribers, :get_notification_feed, [subscriber_id, [feed_identifier: feed_identifier]])
+
+      assert {:ok, _body} = result
     end
 
     test "supports optional seen", %{bypass: bypass} do
@@ -396,7 +405,8 @@ defmodule Novu.SubscribersTest do
         novu_response(conn, 200, %{data: []})
       end)
 
-      assert {:ok, _body} = Subscribers.get_notification_feed(subscriber_id, seen: seen)
+      # credo:disable-for-next-line Credo.Check.Refactor.Apply
+      assert {:ok, _body} = apply(Subscribers, :get_notification_feed, [subscriber_id, [seen: seen]])
     end
   end
 
@@ -408,7 +418,8 @@ defmodule Novu.SubscribersTest do
         novu_response(conn, 200, %{data: %{"count" => 0}})
       end)
 
-      assert {:ok, _body} = Subscribers.get_unseen_count(subscriber_id)
+      # credo:disable-for-next-line Credo.Check.Refactor.Apply
+      assert {:ok, _body} = apply(Subscribers, :get_unseen_count, [subscriber_id])
     end
 
     test "supports optional seen", %{bypass: bypass} do
@@ -421,7 +432,8 @@ defmodule Novu.SubscribersTest do
         novu_response(conn, 200, %{data: %{"count" => 0}})
       end)
 
-      assert {:ok, _body} = Subscribers.get_unseen_count(subscriber_id, seen: seen)
+      # credo:disable-for-next-line Credo.Check.Refactor.Apply
+      assert {:ok, _body} = apply(Subscribers, :get_unseen_count, [subscriber_id, [seen: seen]])
     end
   end
 
@@ -439,7 +451,8 @@ defmodule Novu.SubscribersTest do
         end
       )
 
-      assert {:ok, _body} = Subscribers.mark_message_as_seen(subscriber_id, message_id)
+      # credo:disable-for-next-line Credo.Check.Refactor.Apply
+      assert {:ok, _body} = apply(Subscribers, :mark_message_as_seen, [subscriber_id, message_id])
     end
   end
 
@@ -458,7 +471,8 @@ defmodule Novu.SubscribersTest do
         end
       )
 
-      assert {:ok, _body} = Subscribers.mark_action_as_seen(subscriber_id, message_id, type)
+      # credo:disable-for-next-line Credo.Check.Refactor.Apply
+      assert {:ok, _body} = apply(Subscribers, :mark_action_as_seen, [subscriber_id, message_id, type])
     end
   end
 end
