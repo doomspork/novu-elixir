@@ -71,13 +71,14 @@ defmodule Novu.Agents do
   ## Options
 
     * `:delete_from_provider` - when `true`, also archives a managed-runtime
-      agent on the provider side
+      agent on the provider side. Defaults to `false` (the API requires the
+      parameter, so it is always sent)
 
   [API Documentation](https://docs.novu.co/api-reference/agents/delete-an-agent)
   """
   @spec delete_agent(identifier :: String.t(), opts :: Keyword.t()) :: Http.response()
   def delete_agent(identifier, opts \\ []) do
-    params = add_optional_value(%{}, :deleteFromProvider, opts[:delete_from_provider])
+    params = %{deleteFromProvider: Keyword.get(opts, :delete_from_provider, false)}
 
     identifier |> agent_path() |> Http.delete(params: params)
   end
