@@ -41,7 +41,7 @@ defmodule Novu.Subscribers do
   """
   @spec get_subscriber(subscriber_id :: String.t()) :: Http.response()
   def get_subscriber(subscriber_id) do
-    Http.get("/v1/subscribers/#{URI.encode(subscriber_id)}")
+    Http.get("/v1/subscribers/#{Http.path_segment(subscriber_id)}")
   end
 
   @doc """
@@ -52,7 +52,7 @@ defmodule Novu.Subscribers do
   @spec update_subscriber(subscriber_id :: String.t(), opts :: Keyword.t()) :: Http.response()
   def update_subscriber(subscriber_id, opts \\ []) do
     payload = build_subscriber_payload(opts)
-    Http.put("/v1/subscribers/#{URI.encode(subscriber_id)}", payload)
+    Http.put("/v1/subscribers/#{Http.path_segment(subscriber_id)}", payload)
   end
 
   @doc """
@@ -62,7 +62,7 @@ defmodule Novu.Subscribers do
   """
   @spec delete_subscriber(subscriber_id :: String.t()) :: Http.response()
   def delete_subscriber(subscriber_id) do
-    Http.delete("/v1/subscribers/#{URI.encode(subscriber_id)}")
+    Http.delete("/v1/subscribers/#{Http.path_segment(subscriber_id)}")
   end
 
   @doc """
@@ -82,7 +82,7 @@ defmodule Novu.Subscribers do
 
     payload = %{providerId: provider_id, credentials: credentials}
 
-    Http.put("/v1/subscribers/#{URI.encode(subscriber_id)}/credentials", payload)
+    Http.put("/v1/subscribers/#{Http.path_segment(subscriber_id)}/credentials", payload)
   end
 
   @doc """
@@ -90,7 +90,7 @@ defmodule Novu.Subscribers do
   """
   @spec get_subscriber_preferences(subscriber_id :: String.t()) :: Http.response()
   def get_subscriber_preferences(subscriber_id) do
-    Http.get("/v1/subscribers/#{URI.encode(subscriber_id)}/preferences")
+    Http.get("/v1/subscribers/#{Http.path_segment(subscriber_id)}/preferences")
   end
 
   @doc """
@@ -110,7 +110,10 @@ defmodule Novu.Subscribers do
       }
     }
 
-    Http.patch("/v1/subscribers/#{URI.encode(subscriber_id)}/preferences/#{template_id}", payload)
+    Http.patch(
+      "/v1/subscribers/#{Http.path_segment(subscriber_id)}/preferences/#{Http.path_segment(template_id)}",
+      payload
+    )
   end
 
   @doc """
@@ -127,7 +130,7 @@ defmodule Novu.Subscribers do
       |> add_optional_value(:feedIdentifier, feed_identifier)
       |> add_optional_value(:seen, seen)
 
-    Http.get("/v1/subscribers/#{URI.encode(subscriber_id)}/notifications/feed", params)
+    Http.get("/v1/subscribers/#{Http.path_segment(subscriber_id)}/notifications/feed", params)
   end
 
   @doc """
@@ -138,7 +141,7 @@ defmodule Novu.Subscribers do
     seen = Keyword.get(opts, :seen)
     params = add_optional_value(%{}, :seen, seen)
 
-    Http.get("/v1/subscribers/#{URI.encode(subscriber_id)}/notifications/unseen", params)
+    Http.get("/v1/subscribers/#{Http.path_segment(subscriber_id)}/notifications/unseen", params)
   end
 
   @doc """
@@ -151,7 +154,10 @@ defmodule Novu.Subscribers do
       subscriberId: subscriber_id
     }
 
-    Http.post("/v1/subscribers/#{URI.encode(subscriber_id)}/messages/#{message_id}/seen", payload)
+    Http.post(
+      "/v1/subscribers/#{Http.path_segment(subscriber_id)}/messages/#{Http.path_segment(message_id)}/seen",
+      payload
+    )
   end
 
   @doc """
@@ -166,7 +172,10 @@ defmodule Novu.Subscribers do
       subscriberId: subscriber_id
     }
 
-    Http.post("/v1/subscribers/#{URI.encode(subscriber_id)}/messages/#{message_id}/actions/#{type}", payload)
+    Http.post(
+      "/v1/subscribers/#{Http.path_segment(subscriber_id)}/messages/#{Http.path_segment(message_id)}/actions/#{Http.path_segment(type)}",
+      payload
+    )
   end
 
   defp build_subscriber_payload(opts) do

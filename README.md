@@ -32,6 +32,16 @@ config :novu,
   retry_log_level: :warning  # optional: the log level to emit retry logs at. Can be set to false do disable logging (default: :warning)
 ```
 
+### EU region
+
+Novu's EU region uses a different API host. Point `domain` at it:
+
+```elixir
+config :novu,
+  api_key: "api_key",
+  domain: "https://eu.api.novu.co"
+```
+
 ## Documentation
 
 Documentation is generated using `ex_doc` and published to [HexDocs](https://hexdocs.pm/novu/readme.html) on new releases. This is automatic, so our only ask is ensure public functions have proper documentation and examples provided.

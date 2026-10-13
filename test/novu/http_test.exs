@@ -83,4 +83,118 @@ defmodule Novu.HttpTest do
       assert_in_delta 2000, Time.diff(stop_timer, start_timer, :millisecond), 50
     end
   end
+
+  defp call(:delete, url, opts), do: Http.delete(url, opts)
+  defp call(verb, url, opts), do: apply(Http, verb, [url, %{}, opts])
+
+  describe "query params" do
+    for verb <- [:post, :patch, :put, :delete] do
+      test "#{verb} sends query params", %{bypass: bypass} do
+        verb = unquote(verb)
+        method = verb |> to_string() |> String.upcase()
+
+        Bypass.expect_once(bypass, method, "/q", fn conn ->
+          conn = Plug.Conn.fetch_query_params(conn)
+          assert conn.query_params == %{"a" => "1", "b" => "true"}
+          novu_response(conn, 200, %{})
+        end)
+
+        opts = [params: %{a: 1, b: true, c: nil}]
+
+        assert {:ok, _} = call(verb, "/q", opts)
+      end
+    end
+
+    test "list values are encoded as repeated keys and nil dropped", %{bypass: bypass} do
+      Bypass.expect_once(bypass, "GET", "/q", fn conn ->
+        assert conn.query_string == "a=1&a=2&b=x+y"
+        novu_response(conn, 200, %{})
+      end)
+
+      assert {:ok, _} = Http.get("/q", a: [1, 2], b: "x y", c: nil)
+    end
+
+    test "get merges positional params with opts[:params]", %{bypass: bypass} do
+      Bypass.expect_once(bypass, "GET", "/q", fn conn ->
+        assert Plug.Conn.fetch_query_params(conn).query_params == %{"a" => "1", "b" => "2"}
+        novu_response(conn, 200, %{})
+      end)
+
+      assert {:ok, _} = Http.get("/q", %{a: 1}, params: [b: 2])
+    end
+  end
+
+  describe "bodies and headers" do
+    test "delete sends a JSON body", %{bypass: bypass} do
+      Bypass.expect_once(bypass, "DELETE", "/d", fn conn ->
+        assert Plug.Conn.get_req_header(conn, "content-type") == ["application/json"]
+        assert read_json_body(conn) == %{"ids" => ["a", "b"]}
+        novu_response(conn, 200, %{})
+      end)
+
+      assert {:ok, _} = Http.delete("/d", json: %{ids: ["a", "b"]})
+    end
+
+    test "custom idempotency key and headers", %{bypass: bypass} do
+      Bypass.expect_once(bypass, "POST", "/p", fn conn ->
+        assert Plug.Conn.get_req_header(conn, "idempotency-key") == ["my-key"]
+        assert Plug.Conn.get_req_header(conn, "x-custom") == ["yes"]
+        novu_response(conn, 200, %{})
+      end)
+
+      assert {:ok, _} = Http.post("/p", %{}, idempotency_key: "my-key", headers: [{"x-custom", "yes"}])
+    end
+
+    test "generates an idempotency key for non-GET requests", %{bypass: bypass} do
+      Bypass.expect_once(bypass, "POST", "/p", fn conn ->
+        assert [key] = Plug.Conn.get_req_header(conn, "idempotency-key")
+        assert key != ""
+        novu_response(conn, 200, %{})
+      end)
+
+      assert {:ok, _} = Http.post("/p", %{})
+    end
+
+    test "no idempotency key on GET", %{bypass: bypass} do
+      Bypass.expect_once(bypass, "GET", "/g", fn conn ->
+        assert Plug.Conn.get_req_header(conn, "idempotency-key") == []
+        novu_response(conn, 200, %{})
+      end)
+
+      assert {:ok, _} = Http.get("/g")
+    end
+
+    test "user agent has no space", %{bypass: bypass} do
+      Bypass.expect_once(bypass, "GET", "/g", fn conn ->
+        assert [<<"novu/elixir@", v::binary>>] = Plug.Conn.get_req_header(conn, "user-agent")
+        refute String.starts_with?(v, " ")
+        novu_response(conn, 200, %{})
+      end)
+
+      assert {:ok, _} = Http.get("/g")
+    end
+
+    test "multipart request", %{bypass: bypass} do
+      Bypass.expect_once(bypass, "POST", "/m", fn conn ->
+        assert [ct] = Plug.Conn.get_req_header(conn, "content-type")
+        assert String.starts_with?(ct, "multipart/form-data; boundary=")
+        {:ok, body, _} = Plug.Conn.read_body(conn)
+        assert body =~ ~s(name="file")
+        assert body =~ "file-contents"
+        novu_response(conn, 200, %{})
+      end)
+
+      assert {:ok, _} =
+               Http.post("/m", nil,
+                 form_multipart: [file: {"file-contents", filename: "a.txt", content_type: "text/plain"}]
+               )
+    end
+  end
+
+  describe "path_segment/1" do
+    test "escapes reserved characters" do
+      assert Http.path_segment("a/b c?d") == "a%2Fb%20c%3Fd"
+      assert Http.path_segment(123) == "123"
+    end
+  end
 end

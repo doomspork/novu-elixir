@@ -12,7 +12,7 @@ defmodule Novu.Blueprints do
   """
   @spec get_blueprints(transaction_id :: String.t()) :: Http.response()
   def get_blueprints(transaction_id) do
-    Http.get("/v1/blueprints/#{URI.encode(transaction_id)}")
+    Http.get("/v1/blueprints/#{Http.path_segment(transaction_id)}")
   end
 
   @doc """

@@ -10,7 +10,7 @@ defmodule Novu.MixProject do
       description: "Elixir SDK for Novu",
       deps: deps(),
       docs: docs(),
-      elixir: "~> 1.11",
+      elixir: "~> 1.13",
       name: "Novu",
       package: package(),
       elixirc_paths: elixirc_paths(Mix.env()),
@@ -30,7 +30,7 @@ defmodule Novu.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:req, "~> 0.4.4"},
+      {:req, "~> 0.5.0"},
       {:elixir_uuid, "~> 1.2"},
 
       # Development Dependencies

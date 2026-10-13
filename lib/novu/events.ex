@@ -24,7 +24,7 @@ defmodule Novu.Events do
   """
   @spec cancel_event(transaction_id :: String.t()) :: Http.response()
   def cancel_event(transaction_id) do
-    Http.delete("/v1/events/trigger/#{transaction_id}")
+    Http.delete("/v1/events/trigger/#{Http.path_segment(transaction_id)}")
   end
 
   @doc """

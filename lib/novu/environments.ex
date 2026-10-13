@@ -52,7 +52,7 @@ defmodule Novu.Environments do
       |> add_optional_value(:parentId, Keyword.get(opts, :parent_id))
       |> Map.put(:dns, dns)
 
-    Http.put("/v1/environments/#{URI.encode(environment_id)}", payload)
+    Http.put("/v1/environments/#{Http.path_segment(environment_id)}", payload)
   end
 
   @doc """
