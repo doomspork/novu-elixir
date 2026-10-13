@@ -51,7 +51,7 @@ defmodule Novu.EnvironmentVariables do
   @doc """
   Retrieves an environment variable by key.
 
-  [API Documentation](https://docs.novu.co/api-reference/environment-variables/get-environment-variable)
+  [API Documentation](https://docs.novu.co/api-reference/environment-variables/retrieve-a-variable)
   """
   @spec get_environment_variable(key :: String.t()) :: Http.response()
   def get_environment_variable(key), do: key |> variable_path() |> Http.get()
@@ -86,7 +86,7 @@ defmodule Novu.EnvironmentVariables do
   @doc """
   Deletes an environment variable by key.
 
-  [API Documentation](https://docs.novu.co/api-reference/environment-variables/delete-environment-variable)
+  [API Documentation](https://docs.novu.co/api-reference/environment-variables/delete-a-variable)
   """
   @spec delete_environment_variable(key :: String.t()) :: Http.response()
   def delete_environment_variable(key), do: key |> variable_path() |> Http.delete()

@@ -9,8 +9,6 @@ defmodule Novu.ExecutionDetails do
   Retrieves execution details
 
   **Deprecated**: the endpoint was removed from the Novu API; use `Novu.Notifications.get_notification/1`.
-
-  [API Documentation](https://docs.novu.co/api-reference/execution-details/get-execution-details/)
   """
   @deprecated "The execution details endpoint was removed from the Novu API; use Novu.Notifications.get_notification/1"
   @spec get_execution_details :: Http.response()

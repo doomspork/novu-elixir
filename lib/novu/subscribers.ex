@@ -187,8 +187,6 @@ defmodule Novu.Subscribers do
   Get a subscriber's preferences.
 
   **Deprecated**: the v1 endpoint was removed from the Novu API; use `Novu.Subscribers.Preferences.get/2`.
-
-  [API Documentation](https://docs.novu.co/api/get-subscriber-preference/)
   """
   @deprecated "Use Novu.Subscribers.Preferences.get/2"
   @spec get_subscriber_preferences(subscriber_id :: String.t()) :: Http.response()
@@ -200,8 +198,6 @@ defmodule Novu.Subscribers do
   Update a subscriber's preference for a workflow channel.
 
   **Deprecated**: the v1 endpoint was removed from the Novu API; use `Novu.Subscribers.Preferences.update/2`.
-
-  [API Documentation](https://docs.novu.co/api/update-subscriber-preferences/)
   """
   @deprecated "Use Novu.Subscribers.Preferences.update/2"
   @spec update_subscriber_preferences(
@@ -228,8 +224,6 @@ defmodule Novu.Subscribers do
   Get a subscriber's notification feed.
 
   **Deprecated**: the v1 endpoint is deprecated in the Novu API; use `Novu.Subscribers.Notifications.list/2`.
-
-  [API Documentation](https://docs.novu.co/api/get-a-notification-feed-for-a-particular-subscriber/)
   """
   @deprecated "Use Novu.Subscribers.Notifications.list/2"
   @spec get_notification_feed(subscriber_id :: String.t(), opts :: Keyword.t()) :: Http.response()
@@ -250,8 +244,6 @@ defmodule Novu.Subscribers do
   Get the unseen notification count for a subscriber.
 
   **Deprecated**: the v1 endpoint is deprecated in the Novu API; use `Novu.Subscribers.Notifications.count/2`.
-
-  [API Documentation](https://docs.novu.co/api/get-the-unseen-notification-count-for-subscribers-feed/)
   """
   @deprecated "Use Novu.Subscribers.Notifications.count/2"
   @spec get_unseen_count(subscriber_id :: String.t(), opts :: Keyword.t()) :: Http.response()
@@ -266,8 +258,6 @@ defmodule Novu.Subscribers do
   Mark a subscriber's message as seen.
 
   **Deprecated**: the endpoint was removed from the Novu API; use `Novu.Subscribers.Notifications.mark_as_seen/2`.
-
-  [API Documentation](https://docs.novu.co/api/mark-a-subscriber-feed-message-as-seen/)
   """
   @deprecated "Use Novu.Subscribers.Notifications.mark_as_seen/2"
   @spec mark_message_as_seen(subscriber_id :: String.t(), message_id :: String.t()) :: Http.response()
@@ -287,8 +277,6 @@ defmodule Novu.Subscribers do
   Mark a message action as seen for a subscriber.
 
   **Deprecated**: the v1 endpoint is deprecated in the Novu API; use `Novu.Subscribers.Notifications.complete_action/4`.
-
-  [API Documentation](https://docs.novu.co/api/mark-a-subscriber-feed-message-as-seen/)
   """
   @deprecated "Use Novu.Subscribers.Notifications.complete_action/4"
   @spec mark_action_as_seen(subscriber_id :: String.t(), message_id :: String.t(), type :: String.t()) ::

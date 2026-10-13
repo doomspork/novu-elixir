@@ -12,8 +12,6 @@ defmodule Novu.Blueprints do
   Retrieve a blueprint by its ID.
 
   **Deprecated**: the endpoint was removed from the Novu API; there is no replacement.
-
-  [API Documentation](https://docs.novu.co/api-reference/get-v1blueprints)
   """
   @deprecated "The blueprints endpoints were removed from the Novu API; there is no replacement"
   @spec get_blueprints(blueprint_id :: String.t()) :: Http.response()
@@ -25,8 +23,6 @@ defmodule Novu.Blueprints do
   Returns blueprints grouped by category.
 
   **Deprecated**: the endpoint was removed from the Novu API; there is no replacement.
-
-  [API Documentation](https://docs.novu.co/api-reference/get-v1blueprintsgroup-by-category)
   """
   @deprecated "The blueprints endpoints were removed from the Novu API; there is no replacement"
   @spec get_group_by_category :: Http.response()

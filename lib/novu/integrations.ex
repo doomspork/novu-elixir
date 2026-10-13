@@ -114,7 +114,7 @@ defmodule Novu.Integrations do
 
   `attrs` is passed through as the request body (may be an empty map).
 
-  [API Documentation](https://docs.novu.co/api-reference/integrations/configure-a-chat-integration-webhook)
+  Not yet in the published API reference; see the [OpenAPI spec](https://api.novu.co/openapi.json).
   """
   @spec configure_integration_webhook(integration_identifier :: String.t(), attrs :: map()) ::
           Http.response()
@@ -127,7 +127,7 @@ defmodule Novu.Integrations do
 
   `attrs` is passed through as the request body. Optional key: `subscriberId`.
 
-  [API Documentation](https://docs.novu.co/api-reference/integrations/issue-a-short-lived-mobile-setup-link-for-an-existing-integration)
+  Not yet in the published API reference; see the [OpenAPI spec](https://api.novu.co/openapi.json).
   """
   @spec create_mobile_link(integration_identifier :: String.t(), attrs :: map()) :: Http.response()
   def create_mobile_link(integration_identifier, attrs \\ %{}) do
@@ -141,7 +141,7 @@ defmodule Novu.Integrations do
   `integrationIdentifier`. Optional: `subscriberId`, `connectionIdentifier`,
   `context`, `contextHash`, `scope`, `connectionMode` and `autoLinkUser`.
 
-  [API Documentation](https://docs.novu.co/api-reference/integrations/generate-oauth-url-for-a-workspacetenant-connection)
+  Not yet in the published API reference; see the [OpenAPI spec](https://api.novu.co/openapi.json).
   """
   @spec generate_channel_connection_oauth_url(attrs :: map()) :: Http.response()
   def generate_channel_connection_oauth_url(attrs) do
@@ -155,7 +155,7 @@ defmodule Novu.Integrations do
   and `integrationIdentifier`. Optional: `connectionIdentifier`, `context`,
   `contextHash` and `userScope`.
 
-  [API Documentation](https://docs.novu.co/api-reference/integrations/generate-oauth-url-to-link-a-subscriber-user-identity)
+  Not yet in the published API reference; see the [OpenAPI spec](https://api.novu.co/openapi.json).
   """
   @spec generate_channel_endpoint_oauth_url(attrs :: map()) :: Http.response()
   def generate_channel_endpoint_oauth_url(attrs) do
@@ -168,7 +168,7 @@ defmodule Novu.Integrations do
   `attrs` is passed through as the request body. Required keys:
   `integrationIdentifier` and `subscriberId`. Optional: `context` and `contextHash`.
 
-  [API Documentation](https://docs.novu.co/api-reference/integrations/issue-a-url-to-link-a-subscriber-chat-identity)
+  Not yet in the published API reference; see the [OpenAPI spec](https://api.novu.co/openapi.json).
   """
   @spec create_channel_endpoint_link(attrs :: map()) :: Http.response()
   def create_channel_endpoint_link(attrs) do

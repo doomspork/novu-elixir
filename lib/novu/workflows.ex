@@ -152,7 +152,7 @@ defmodule Novu.Workflows do
   Note: this endpoint is present in the live API (`https://api.novu.co/api-json`)
   but is not yet in the published docs spec.
 
-  [API Documentation](https://docs.novu.co/api-reference/workflows)
+  Not yet in the published API reference; see the [OpenAPI spec](https://api.novu.co/openapi.json).
   """
   @spec duplicate_workflow(workflow_id :: String.t(), attrs :: map()) :: Http.response()
   def duplicate_workflow(workflow_id, attrs) do

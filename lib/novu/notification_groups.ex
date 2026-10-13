@@ -13,8 +13,6 @@ defmodule Novu.NotificationGroups do
   Creates a notification group
 
   **Deprecated**: the endpoint was removed from the Novu API; use workflow `tags` (`Novu.Workflows`).
-
-  [API Documentation](https://docs.novu.co/api/create-notification-group/)
   """
   @deprecated "The notification groups endpoints were removed from the Novu API; use workflow tags (Novu.Workflows)"
   @spec create_notification_group(name :: String.t()) :: Http.response()
@@ -26,8 +24,6 @@ defmodule Novu.NotificationGroups do
   Retrieves a list of notifications groups
 
   **Deprecated**: the endpoint was removed from the Novu API; use workflow `tags` (`Novu.Workflows`).
-
-  [API Documentation](https://docs.novu.co/api/get-notification-groups/)
   """
   @deprecated "The notification groups endpoints were removed from the Novu API; use workflow tags (Novu.Workflows)"
   @spec get_notification_groups :: Http.response()
