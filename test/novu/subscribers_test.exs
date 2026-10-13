@@ -274,6 +274,48 @@ defmodule Novu.SubscribersTest do
     end
   end
 
+  describe "get_subscriber_subscriptions/2" do
+    test "creates a GET to /v2/subscribers/{subscriberId}/subscriptions", %{bypass: bypass} do
+      Bypass.expect(bypass, "GET", "/v2/subscribers/example-id/subscriptions", fn conn ->
+        novu_response(conn, 200, %{data: []})
+      end)
+
+      assert {:ok, _body} = Subscribers.get_subscriber_subscriptions("example-id")
+    end
+
+    for {opt, key, value} <- [
+          {:after, "after", "cursor-a"},
+          {:before, "before", "cursor-b"},
+          {:limit, "limit", 25},
+          {:order_direction, "orderDirection", "ASC"},
+          {:order_by, "orderBy", "createdAt"},
+          {:include_cursor, "includeCursor", true},
+          {:key, "key", "topic-key"}
+        ] do
+      test "supports optional #{opt}", %{bypass: bypass} do
+        key = unquote(key)
+        expected = to_string(unquote(value))
+
+        Bypass.expect(bypass, "GET", "/v2/subscribers/example-id/subscriptions", fn conn ->
+          assert %{^key => ^expected} = conn.query_params
+          novu_response(conn, 200, %{data: []})
+        end)
+
+        assert {:ok, _body} = Subscribers.get_subscriber_subscriptions("example-id", [{unquote(opt), unquote(value)}])
+      end
+    end
+
+    test "supports optional context_keys as repeated params", %{bypass: bypass} do
+      Bypass.expect(bypass, "GET", "/v2/subscribers/example-id/subscriptions", fn conn ->
+        assert conn.query_string == "contextKeys=tenant%3Aacme&contextKeys=org%3A1"
+        novu_response(conn, 200, %{data: []})
+      end)
+
+      assert {:ok, _body} =
+               Subscribers.get_subscriber_subscriptions("example-id", context_keys: ["tenant:acme", "org:1"])
+    end
+  end
+
   describe "get_subscriber_preferences/1" do
     test "creates a GET to /v1/subscribers/{subscriberId}/preferences", %{bypass: bypass} do
       subscriber_id = "example-id"

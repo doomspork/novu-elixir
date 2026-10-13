@@ -276,6 +276,37 @@ defmodule Novu.Subscribers do
     )
   end
 
+  @doc """
+  Retrieves the topic subscriptions of a subscriber.
+
+  ## Options
+
+    * `:after`, `:before` - pagination cursors
+    * `:limit` - number of items to return (max 100)
+    * `:order_direction` - `"ASC"` or `"DESC"`
+    * `:order_by` - field to order by
+    * `:include_cursor` - include the cursor item in the response
+    * `:key` - filter by topic key
+    * `:context_keys` - list of context keys to filter by exactly (format `"type:id"`)
+
+  [API Documentation](https://docs.novu.co/api-reference/subscribers/retrieve-subscriber-subscriptions)
+  """
+  @spec get_subscriber_subscriptions(subscriber_id :: String.t(), opts :: Keyword.t()) :: Http.response()
+  def get_subscriber_subscriptions(subscriber_id, opts \\ []) do
+    params =
+      %{}
+      |> add_optional_value(:after, opts[:after])
+      |> add_optional_value(:before, opts[:before])
+      |> add_optional_value(:limit, opts[:limit])
+      |> add_optional_value(:orderDirection, opts[:order_direction])
+      |> add_optional_value(:orderBy, opts[:order_by])
+      |> add_optional_value(:includeCursor, opts[:include_cursor])
+      |> add_optional_value(:key, opts[:key])
+      |> add_optional_value(:contextKeys, opts[:context_keys])
+
+    Http.get("/v2/subscribers/#{Http.path_segment(subscriber_id)}/subscriptions", params)
+  end
+
   defp credentials_path(subscriber_id), do: "/v1/subscribers/#{Http.path_segment(subscriber_id)}/credentials"
 
   defp credentials_payload(provider_id, opts) do
