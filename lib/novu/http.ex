@@ -5,8 +5,6 @@ defmodule Novu.Http do
   handling.
   """
 
-  require Logger
-
   @user_agent "novu/elixir@" <> Mix.Project.config()[:version]
 
   @type response() :: {:ok, map()} | {:error, list() | :timeout | any()}
