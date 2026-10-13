@@ -92,7 +92,7 @@ defmodule Novu.AgentsTest do
   describe "delete_agent/2" do
     test "creates a DELETE", %{bypass: bypass} do
       Bypass.expect(bypass, "DELETE", "/v1/agents/bot", fn conn ->
-        assert conn.query_string == ""
+        assert conn.query_string == "deleteFromProvider=false"
         Plug.Conn.resp(conn, 204, "")
       end)
 
