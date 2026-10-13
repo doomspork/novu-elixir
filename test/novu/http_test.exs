@@ -82,6 +82,37 @@ defmodule Novu.HttpTest do
 
       assert_in_delta 2000, Time.diff(stop_timer, start_timer, :millisecond), 50
     end
+
+    test "retries transient failures on non-GET requests", %{bypass: bypass} do
+      Application.put_env(:novu, :wait_min, 10)
+      Application.put_env(:novu, :max_retries, 1)
+      {:ok, attempts} = Agent.start_link(fn -> 0 end)
+
+      Bypass.expect(bypass, "POST", "/", fn conn ->
+        Agent.update(attempts, &(&1 + 1))
+        novu_response(conn, 503, %{})
+      end)
+
+      assert {:error, _} = Http.post("/", %{})
+      assert Agent.get(attempts, & &1) == 2
+    end
+
+    test "does not retry non-transient errors", %{bypass: bypass} do
+      Application.put_env(:novu, :wait_min, 10)
+      Application.put_env(:novu, :max_retries, 2)
+
+      Bypass.expect_once(bypass, "POST", "/", fn conn ->
+        novu_response(conn, 422, %{errors: ["invalid"]})
+      end)
+
+      assert {:error, ["invalid"]} = Http.post("/", %{})
+    end
+
+    test "returns the transport error when the server is unreachable", %{bypass: bypass} do
+      Bypass.down(bypass)
+
+      assert {:error, %Req.TransportError{reason: :econnrefused}} = Http.get("/")
+    end
   end
 
   defp call(:delete, url, opts), do: Http.delete(url, opts)
