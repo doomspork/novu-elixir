@@ -17,7 +17,7 @@ defmodule Novu.Messages do
     * `:page` - page number
     * `:limit` - page size
 
-  [API Documentation](https://docs.novu.co/api-reference/messages/get-messages)
+  [API Documentation](https://docs.novu.co/api-reference/messages/list-all-messages)
   """
   @spec get_messages(opts :: keyword()) :: Http.response()
   def get_messages(opts \\ []) do
@@ -36,7 +36,7 @@ defmodule Novu.Messages do
   @doc """
   Deletes a message by its ID.
 
-  [API Documentation](https://docs.novu.co/api-reference/messages/delete-message)
+  [API Documentation](https://docs.novu.co/api-reference/messages/delete-a-message)
   """
   @spec delete_message(message_id :: String.t()) :: Http.response()
   def delete_message(message_id) do
@@ -48,7 +48,7 @@ defmodule Novu.Messages do
 
   Deprecated, use `delete_message/1`.
 
-  [API Documentation](https://docs.novu.co/api-reference/messages/delete-message)
+  [API Documentation](https://docs.novu.co/api-reference/messages/delete-a-message)
   """
   @deprecated "Use delete_message/1"
   @spec delete_messages(message_id :: String.t()) :: Http.response()
