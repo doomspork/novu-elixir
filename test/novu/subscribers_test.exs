@@ -24,8 +24,8 @@ defmodule Novu.SubscribersTest do
 
   describe "path escaping" do
     test "subscriber id containing a slash is escaped", %{bypass: bypass} do
-      Bypass.expect_once(bypass, "GET", "/v1/subscribers/org%2F123", fn conn ->
-        assert conn.request_path == "/v1/subscribers/org%2F123"
+      Bypass.expect_once(bypass, "GET", "/v2/subscribers/org%2F123", fn conn ->
+        assert conn.request_path == "/v2/subscribers/org%2F123"
         novu_response(conn, 200, %{data: %{}})
       end)
 
@@ -33,239 +33,244 @@ defmodule Novu.SubscribersTest do
     end
   end
 
-  describe "get_subscribers/1" do
-    test "creates a GET to /v1/subscribers", %{bypass: bypass} do
-      Bypass.expect(bypass, "GET", "/v1/subscribers", fn conn ->
-        novu_response(conn, 200, %{page: 0, totalCount: 0, pageSize: 10, data: []})
+  describe "search_subscribers/1" do
+    test "creates a GET to /v2/subscribers", %{bypass: bypass} do
+      Bypass.expect(bypass, "GET", "/v2/subscribers", fn conn ->
+        novu_response(conn, 200, %{data: [], next: nil, previous: nil})
       end)
 
-      assert {:ok, _body} = Subscribers.get_subscribers()
+      assert {:ok, _body} = Subscribers.search_subscribers()
     end
 
-    test "supports optional page", %{bypass: bypass} do
-      page = 2
+    for {opt, key, value} <- [
+          {:after, "after", "cursor-a"},
+          {:before, "before", "cursor-b"},
+          {:limit, "limit", 25},
+          {:order_direction, "orderDirection", "DESC"},
+          {:order_by, "orderBy", "createdAt"},
+          {:include_cursor, "includeCursor", true},
+          {:email, "email", "test@example.com"},
+          {:name, "name", "Jane"},
+          {:phone, "phone", "+15551234567"},
+          {:subscriber_id, "subscriberId", "example-id"}
+        ] do
+      test "supports optional #{opt}", %{bypass: bypass} do
+        key = unquote(key)
+        expected = to_string(unquote(value))
 
-      Bypass.expect(bypass, "GET", "/v1/subscribers", fn conn ->
-        page_param = to_string(page)
-        assert %{"page" => ^page_param} = conn.query_params
-        novu_response(conn, 200, %{page: 2, totalCount: 0, pageSize: 10, data: []})
+        Bypass.expect(bypass, "GET", "/v2/subscribers", fn conn ->
+          assert %{^key => ^expected} = conn.query_params
+          novu_response(conn, 200, %{data: []})
+        end)
+
+        assert {:ok, _body} = Subscribers.search_subscribers([{unquote(opt), unquote(value)}])
+      end
+    end
+  end
+
+  describe "get_subscribers/1 (deprecated)" do
+    test "delegates to GET /v2/subscribers and forwards limit but not page", %{bypass: bypass} do
+      Bypass.expect(bypass, "GET", "/v2/subscribers", fn conn ->
+        assert %{"limit" => "5"} = conn.query_params
+        refute Map.has_key?(conn.query_params, "page")
+        novu_response(conn, 200, %{data: []})
       end)
 
-      assert {:ok, _body} = Subscribers.get_subscribers(page: page)
+      # credo:disable-for-next-line Credo.Check.Refactor.Apply
+      assert {:ok, _body} = apply(Subscribers, :get_subscribers, [[limit: 5, page: 2]])
     end
   end
 
   describe "create_subscriber/2" do
-    test "creates a POST to /v1/subscribers", %{bypass: bypass} do
+    test "creates a POST to /v2/subscribers", %{bypass: bypass} do
       subscriber_id = "example-id"
 
-      Bypass.expect(bypass, "POST", "/v1/subscribers", fn conn ->
+      Bypass.expect(bypass, "POST", "/v2/subscribers", fn conn ->
         assert %{"subscriberId" => ^subscriber_id} = read_json_body(conn)
+        assert conn.query_string == ""
         novu_response(conn, 201, %{data: %{subscriberId: subscriber_id}})
       end)
 
       assert {:ok, _body} = Subscribers.create_subscriber(subscriber_id)
     end
 
-    test "supports optional email", %{bypass: bypass} do
-      subscriber_id = "example-id"
-      email = "test@example.com"
+    for {opt, key, value} <- [
+          {:email, "email", "test@example.com"},
+          {:first_name, "firstName", "test"},
+          {:last_name, "lastName", "user"},
+          {:phone, "phone", "+15551234567"},
+          {:avatar, "avatar", "https://i.pravatar.cc/150"},
+          {:locale, "locale", "en_US"},
+          {:timezone, "timezone", "America/New_York"},
+          {:data, "data", %{"plan" => "pro"}}
+        ] do
+      test "supports optional #{opt}", %{bypass: bypass} do
+        key = unquote(key)
+        value = unquote(Macro.escape(value))
 
-      Bypass.expect(bypass, "POST", "/v1/subscribers", fn conn ->
-        assert %{"subscriberId" => ^subscriber_id, "email" => ^email} = read_json_body(conn)
-        novu_response(conn, 201, %{data: %{subscriberId: subscriber_id}})
-      end)
+        Bypass.expect(bypass, "POST", "/v2/subscribers", fn conn ->
+          assert %{"subscriberId" => "example-id", ^key => ^value} = read_json_body(conn)
+          novu_response(conn, 201, %{data: %{subscriberId: "example-id"}})
+        end)
 
-      assert {:ok, _body} = Subscribers.create_subscriber(subscriber_id, email: email)
+        assert {:ok, _body} = Subscribers.create_subscriber("example-id", [{unquote(opt), value}])
+      end
     end
 
-    test "supports optional first_name", %{bypass: bypass} do
-      subscriber_id = "example-id"
-      first_name = "test"
-
-      Bypass.expect(bypass, "POST", "/v1/subscribers", fn conn ->
-        assert %{"subscriberId" => ^subscriber_id, "firstName" => ^first_name} = read_json_body(conn)
-        novu_response(conn, 201, %{data: %{subscriberId: subscriber_id}})
+    test "supports fail_if_exists as a query param", %{bypass: bypass} do
+      Bypass.expect(bypass, "POST", "/v2/subscribers", fn conn ->
+        assert %{"failIfExists" => "true"} = conn.query_params
+        refute Map.has_key?(read_json_body(conn), "failIfExists")
+        novu_response(conn, 201, %{data: %{subscriberId: "example-id"}})
       end)
 
-      assert {:ok, _body} = Subscribers.create_subscriber(subscriber_id, first_name: first_name)
-    end
-
-    test "supports optional last_name", %{bypass: bypass} do
-      subscriber_id = "example-id"
-      last_name = "test"
-
-      Bypass.expect(bypass, "POST", "/v1/subscribers", fn conn ->
-        assert %{"subscriberId" => ^subscriber_id, "lastName" => ^last_name} = read_json_body(conn)
-        novu_response(conn, 201, %{data: %{subscriberId: subscriber_id}})
-      end)
-
-      assert {:ok, _body} = Subscribers.create_subscriber(subscriber_id, last_name: last_name)
-    end
-
-    test "supports optional phone", %{bypass: bypass} do
-      subscriber_id = "example-id"
-      phone = "+15551234567"
-
-      Bypass.expect(bypass, "POST", "/v1/subscribers", fn conn ->
-        assert %{"subscriberId" => ^subscriber_id, "phone" => ^phone} = read_json_body(conn)
-        novu_response(conn, 201, %{data: %{subscriberId: subscriber_id}})
-      end)
-
-      assert {:ok, _body} = Subscribers.create_subscriber(subscriber_id, phone: phone)
-    end
-
-    test "supports optional avatar", %{bypass: bypass} do
-      subscriber_id = "example-id"
-      avatar = "https://i.pravatar.cc/150"
-
-      Bypass.expect(bypass, "POST", "/v1/subscribers", fn conn ->
-        assert %{"subscriberId" => ^subscriber_id, "avatar" => ^avatar} = read_json_body(conn)
-        novu_response(conn, 201, %{data: %{subscriberId: subscriber_id}})
-      end)
-
-      assert {:ok, _body} = Subscribers.create_subscriber(subscriber_id, avatar: avatar)
+      assert {:ok, _body} = Subscribers.create_subscriber("example-id", fail_if_exists: true)
     end
   end
 
   describe "get_subscriber/1" do
-    test "creates a GET to /v1/subscribers/{subscriberId}", %{bypass: bypass} do
-      subscriber_id = "example-id"
-
-      Bypass.expect(bypass, "GET", "/v1/subscribers/#{URI.encode(subscriber_id)}", fn conn ->
-        novu_response(conn, 200, %{data: %{subscriberId: subscriber_id}})
+    test "creates a GET to /v2/subscribers/{subscriberId}", %{bypass: bypass} do
+      Bypass.expect(bypass, "GET", "/v2/subscribers/example-id", fn conn ->
+        novu_response(conn, 200, %{data: %{subscriberId: "example-id"}})
       end)
 
-      assert {:ok, _body} = Subscribers.get_subscriber(subscriber_id)
+      assert {:ok, _body} = Subscribers.get_subscriber("example-id")
     end
   end
 
   describe "update_subscriber/2" do
-    test "creates a POST to /v1/subscribers/{subscriberId}", %{bypass: bypass} do
-      subscriber_id = "example-id"
-
-      Bypass.expect(bypass, "PUT", "/v1/subscribers/#{URI.encode(subscriber_id)}", fn conn ->
-        assert %{} = read_json_body(conn)
-        novu_response(conn, 200, %{data: %{subscriberId: subscriber_id}})
+    test "creates a PATCH to /v2/subscribers/{subscriberId}", %{bypass: bypass} do
+      Bypass.expect(bypass, "PATCH", "/v2/subscribers/example-id", fn conn ->
+        assert %{} == read_json_body(conn)
+        novu_response(conn, 200, %{data: %{subscriberId: "example-id"}})
       end)
 
-      assert {:ok, _body} = Subscribers.update_subscriber(subscriber_id)
+      assert {:ok, _body} = Subscribers.update_subscriber("example-id")
     end
 
-    test "supports optional email", %{bypass: bypass} do
-      subscriber_id = "example-id"
-      email = "test@example.com"
+    for {opt, key, value} <- [
+          {:email, "email", "test@example.com"},
+          {:first_name, "firstName", "test"},
+          {:last_name, "lastName", "user"},
+          {:phone, "phone", "+15551234567"},
+          {:avatar, "avatar", "https://i.pravatar.cc/150"},
+          {:locale, "locale", "en_US"},
+          {:timezone, "timezone", "America/New_York"},
+          {:data, "data", %{"plan" => "pro"}}
+        ] do
+      test "supports optional #{opt}", %{bypass: bypass} do
+        key = unquote(key)
+        value = unquote(Macro.escape(value))
 
-      Bypass.expect(bypass, "PUT", "/v1/subscribers/#{URI.encode(subscriber_id)}", fn conn ->
-        assert %{"email" => ^email} = read_json_body(conn)
-        novu_response(conn, 200, %{data: %{subscriberId: subscriber_id}})
-      end)
+        Bypass.expect(bypass, "PATCH", "/v2/subscribers/example-id", fn conn ->
+          assert %{^key => ^value} = read_json_body(conn)
+          novu_response(conn, 200, %{data: %{subscriberId: "example-id"}})
+        end)
 
-      assert {:ok, _body} = Subscribers.update_subscriber(subscriber_id, email: email)
-    end
-
-    test "supports optional first_name", %{bypass: bypass} do
-      subscriber_id = "example-id"
-      first_name = "test"
-
-      Bypass.expect(bypass, "PUT", "/v1/subscribers/#{URI.encode(subscriber_id)}", fn conn ->
-        assert %{"firstName" => ^first_name} = read_json_body(conn)
-        novu_response(conn, 200, %{data: %{subscriberId: subscriber_id}})
-      end)
-
-      assert {:ok, _body} = Subscribers.update_subscriber(subscriber_id, first_name: first_name)
-    end
-
-    test "supports optional last_name", %{bypass: bypass} do
-      subscriber_id = "example-id"
-      last_name = "test"
-
-      Bypass.expect(bypass, "PUT", "/v1/subscribers/#{URI.encode(subscriber_id)}", fn conn ->
-        assert %{"lastName" => ^last_name} = read_json_body(conn)
-        novu_response(conn, 200, %{data: %{subscriberId: subscriber_id}})
-      end)
-
-      assert {:ok, _body} = Subscribers.update_subscriber(subscriber_id, last_name: last_name)
-    end
-
-    test "supports optional phone", %{bypass: bypass} do
-      subscriber_id = "example-id"
-      phone = "+15551234567"
-
-      Bypass.expect(bypass, "PUT", "/v1/subscribers/#{URI.encode(subscriber_id)}", fn conn ->
-        assert %{"phone" => ^phone} = read_json_body(conn)
-        novu_response(conn, 200, %{data: %{subscriberId: subscriber_id}})
-      end)
-
-      assert {:ok, _body} = Subscribers.update_subscriber(subscriber_id, phone: phone)
-    end
-
-    test "supports optional avatar", %{bypass: bypass} do
-      subscriber_id = "example-id"
-      avatar = "https://i.pravatar.cc/150"
-
-      Bypass.expect(bypass, "PUT", "/v1/subscribers/#{URI.encode(subscriber_id)}", fn conn ->
-        assert %{"avatar" => ^avatar} = read_json_body(conn)
-        novu_response(conn, 200, %{data: %{subscriberId: subscriber_id}})
-      end)
-
-      assert {:ok, _body} = Subscribers.update_subscriber(subscriber_id, avatar: avatar)
+        assert {:ok, _body} = Subscribers.update_subscriber("example-id", [{unquote(opt), value}])
+      end
     end
   end
 
   describe "delete_subscriber/1" do
-    test "creates a DELETE to /v1/subscribers/{subscriberId}", %{bypass: bypass} do
-      subscriber_id = "example-id"
-
-      Bypass.expect(bypass, "DELETE", "/v1/subscribers/#{URI.encode(subscriber_id)}", fn conn ->
+    test "creates a DELETE to /v2/subscribers/{subscriberId}", %{bypass: bypass} do
+      Bypass.expect(bypass, "DELETE", "/v2/subscribers/example-id", fn conn ->
         novu_response(conn, 200, %{acknowledged: true, status: "deleted"})
       end)
 
-      assert {:ok, _body} = Subscribers.delete_subscriber(subscriber_id)
+      assert {:ok, _body} = Subscribers.delete_subscriber("example-id")
     end
   end
 
-  describe "update_subscriber_credentials/3" do
-    test "creates a PUT to /v1/subscribers/{subscriberId}/credentials", %{bypass: bypass} do
-      subscriber_id = "example-id"
-      provider_id = "provider-id"
+  describe "bulk_create_subscribers/1" do
+    test "creates a POST to /v1/subscribers/bulk with subscribers", %{bypass: bypass} do
+      subscribers = [%{subscriberId: "a", email: "a@example.com"}, %{subscriberId: "b"}]
 
-      Bypass.expect(bypass, "PUT", "/v1/subscribers/#{URI.encode(subscriber_id)}/credentials", fn conn ->
-        assert %{"providerId" => ^provider_id} = read_json_body(conn)
-        novu_response(conn, 200, %{data: %{subscriberId: subscriber_id}})
-      end)
-
-      assert {:ok, _body} = Subscribers.update_subscriber_credentials(subscriber_id, provider_id)
-    end
-
-    test "supports optional webhook_url", %{bypass: bypass} do
-      subscriber_id = "example-id"
-      provider_id = "provider-id"
-      webhook_url = "https://example.com/webhooks"
-
-      Bypass.expect(bypass, "PUT", "/v1/subscribers/#{URI.encode(subscriber_id)}/credentials", fn conn ->
-        assert %{"providerId" => ^provider_id, "credentials" => %{"webhookUrl" => ^webhook_url}} = read_json_body(conn)
-        novu_response(conn, 200, %{data: %{subscriberId: subscriber_id}})
-      end)
-
-      assert {:ok, _body} =
-               Subscribers.update_subscriber_credentials(subscriber_id, provider_id, webhook_url: webhook_url)
-    end
-
-    test "supports optional device_tokens array", %{bypass: bypass} do
-      subscriber_id = "example-id"
-      provider_id = "provider-id"
-      device_tokens = ["abc", "123"]
-
-      Bypass.expect(bypass, "PUT", "/v1/subscribers/#{URI.encode(subscriber_id)}/credentials", fn conn ->
-        assert %{"providerId" => ^provider_id, "credentials" => %{"deviceTokens" => ^device_tokens}} =
+      Bypass.expect(bypass, "POST", "/v1/subscribers/bulk", fn conn ->
+        assert %{"subscribers" => [%{"subscriberId" => "a", "email" => "a@example.com"}, %{"subscriberId" => "b"}]} =
                  read_json_body(conn)
 
-        novu_response(conn, 200, %{data: %{subscriberId: subscriber_id}})
+        novu_response(conn, 201, %{data: %{created: [], updated: [], failed: []}})
       end)
 
-      assert {:ok, _body} =
-               Subscribers.update_subscriber_credentials(subscriber_id, provider_id, device_tokens: device_tokens)
+      assert {:ok, _body} = Subscribers.bulk_create_subscribers(subscribers)
+    end
+  end
+
+  describe "update_subscriber_online_status/2" do
+    test "creates a PATCH to /v1/subscribers/{subscriberId}/online-status", %{bypass: bypass} do
+      Bypass.expect(bypass, "PATCH", "/v1/subscribers/example-id/online-status", fn conn ->
+        assert %{"isOnline" => false} = read_json_body(conn)
+        novu_response(conn, 200, %{data: %{subscriberId: "example-id"}})
+      end)
+
+      assert {:ok, _body} = Subscribers.update_subscriber_online_status("example-id", false)
+    end
+  end
+
+  for {fun, method} <- [update_subscriber_credentials: "PUT", upsert_subscriber_credentials: "PATCH"] do
+    describe "#{fun}/3" do
+      test "creates a #{method} to /v1/subscribers/{subscriberId}/credentials", %{bypass: bypass} do
+        Bypass.expect(bypass, unquote(method), "/v1/subscribers/example-id/credentials", fn conn ->
+          assert %{"providerId" => "fcm", "credentials" => %{}} = read_json_body(conn)
+          novu_response(conn, 200, %{data: %{subscriberId: "example-id"}})
+        end)
+
+        assert {:ok, _body} = apply(Subscribers, unquote(fun), ["example-id", "fcm"])
+      end
+
+      for {opt, key, value} <- [
+            {:webhook_url, "webhookUrl", "https://example.com/webhooks"},
+            {:channel, "channel", "#general"},
+            {:device_tokens, "deviceTokens", ["abc", "123"]},
+            {:alert_uid, "alertUid", "alert-1"},
+            {:title, "title", "Title"},
+            {:image_url, "imageUrl", "https://example.com/i.png"},
+            {:state, "state", "open"},
+            {:external_url, "externalUrl", "https://example.com/x"}
+          ] do
+        test "supports optional #{opt}", %{bypass: bypass} do
+          key = unquote(key)
+          value = unquote(value)
+
+          Bypass.expect(bypass, unquote(method), "/v1/subscribers/example-id/credentials", fn conn ->
+            assert %{"providerId" => "fcm", "credentials" => %{^key => ^value}} = read_json_body(conn)
+            novu_response(conn, 200, %{data: %{subscriberId: "example-id"}})
+          end)
+
+          assert {:ok, _body} = apply(Subscribers, unquote(fun), ["example-id", "fcm", [{unquote(opt), value}]])
+        end
+      end
+
+      test "supports optional integration_identifier at the top level", %{bypass: bypass} do
+        Bypass.expect(bypass, unquote(method), "/v1/subscribers/example-id/credentials", fn conn ->
+          body = read_json_body(conn)
+          assert %{"integrationIdentifier" => "my-fcm", "providerId" => "fcm"} = body
+          refute Map.has_key?(body["credentials"], "integrationIdentifier")
+          novu_response(conn, 200, %{data: %{subscriberId: "example-id"}})
+        end)
+
+        assert {:ok, _body} =
+                 apply(Subscribers, unquote(fun), ["example-id", "fcm", [integration_identifier: "my-fcm"]])
+      end
+    end
+  end
+
+  describe "delete_subscriber_credentials/2" do
+    test "creates a DELETE to /v1/subscribers/{subscriberId}/credentials/{providerId}", %{bypass: bypass} do
+      Bypass.expect(bypass, "DELETE", "/v1/subscribers/example-id/credentials/fcm", fn conn ->
+        Plug.Conn.send_resp(conn, 204, "")
+      end)
+
+      assert {:ok, _body} = Subscribers.delete_subscriber_credentials("example-id", "fcm")
+    end
+
+    test "escapes the provider id", %{bypass: bypass} do
+      Bypass.expect(bypass, "DELETE", "/v1/subscribers/example-id/credentials/a%2Fb", fn conn ->
+        Plug.Conn.send_resp(conn, 204, "")
+      end)
+
+      assert {:ok, _body} = Subscribers.delete_subscriber_credentials("example-id", "a/b")
     end
   end
 
